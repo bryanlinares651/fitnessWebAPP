@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0b0a">
+<title>ENTRENO · Bryan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0a; --surface:#121512; --surface2:#1a1e19; --line:rgba(255,255,255,.08);
+    --text:#eef3ea; --muted:#7f8a7d; --accent:#caff32; --accent2:#9bff6a;
+    --accent-dim:rgba(202,255,50,.12); --danger:#ff5a4d;
+    --display:'Anton',sans-serif; --body:'Hanken Grotesk',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--body)}
+  body{
+    max-width:540px;margin:0 auto;min-height:100vh;padding:0 16px 140px;
+    background:
+      radial-gradient(120% 60% at 100% -10%, rgba(202,255,50,.10), transparent 60%),
+      radial-gradient(120% 50% at -20% 0%, rgba(155,255,106,.06), transparent 55%),
+      var(--bg);
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1}
+
+  /* HEADER */
+  header{padding:26px 4px 14px}
+  .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .kicker::before{content:"";width:22px;height:2px;background:var(--accent);display:inline-block}
+  h1{font-family:var(--display);font-size:clamp(46px,15vw,68px);line-height:.86;letter-spacing:.01em;text-transform:uppercase}
+  h1 .out{-webkit-text-stroke:1.6px var(--accent);color:transparent}
+  .date{margin-top:10px;color:var(--muted);font-size:14px;font-weight:600;text-transform:capitalize}
+
+  /* PROGRESS RING + STATS */
+  .topbar{display:flex;align-items:center;gap:16px;margin-top:18px;padding:16px;background:linear-gradient(180deg,var(--surface),#0e110d);border:1px solid var(--line);border-radius:20px}
+  .ring{--p:0;position:relative;width:74px;height:74px;flex:0 0 auto;border-radius:50%;
+    background:conic-gradient(var(--accent) calc(var(--p)*1%), rgba(255,255,255,.07) 0);
+    display:grid;place-items:center;transition:--p .6s ease}
+  .ring::after{content:"";position:absolute;inset:7px;background:#0e110d;border-radius:50%}
+  .ring b{position:relative;z-index:1;font-family:var(--display);font-size:22px;line-height:1}
+  .ring small{position:relative;z-index:1;display:block;text-align:center;font-size:9px;color:var(--muted);letter-spacing:.15em;margin-top:1px}
+  .tstats{flex:1}
+  .tstats .big{font-family:var(--display);font-size:30px;line-height:1}
+  .tstats .lbl{color:var(--muted);font-size:12.5px;font-weight:600;margin-top:3px}
+  .streak{margin-top:8px;font-size:12px;color:var(--accent2);font-weight:700;display:flex;align-items:center;gap:6px}
+
+  /* DAY TABS */
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 6px}
+  .tab{position:relative;padding:13px 4px;border:1px solid var(--line);background:var(--surface);border-radius:14px;
+    text-align:center;cursor:pointer;transition:.18s;overflow:hidden}
+  .tab .t-ico{font-size:19px;line-height:1}
+  .tab .t-lbl{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;margin-top:5px;color:var(--muted);text-transform:uppercase}
+  .tab.active{background:var(--accent);border-color:var(--accent)}
+  .tab.active .t-lbl{color:#0a0b0a}
+  .tab.active .t-ico{filter:grayscale(1) brightness(.2)}
+  .tab .sug{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+  .tab.active .sug{display:none}
+
+  .sectitle{font-family:var(--display);font-size:15px;letter-spacing:.08em;color:var(--muted);margin:20px 2px 10px;text-transform:uppercase}
+
+  /* EXERCISE CARD */
+  .ex{display:flex;align-items:center;gap:13px;padding:14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;margin-bottom:10px;transition:.2s;animation:rise .5s both;cursor:pointer}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .ex.done{background:linear-gradient(180deg,var(--accent-dim),transparent);border-color:rgba(202,255,50,.4)}
+  .check{flex:0 0 auto;width:30px;height:30px;border-radius:9px;border:2px solid var(--muted);
+    display:grid;place-items:center;transition:.2s}
+  .check svg{width:16px;height:16px;stroke:#0a0b0a;stroke-width:3.5;fill:none;stroke-dasharray:24;stroke-dashoffset:24;transition:.25s}
+  .ex.done .check{background:var(--accent);border-color:var(--accent);transform:scale(1.04)}
+  .ex.done .check svg{stroke-dashoffset:0}
+  .ex-main{flex:1;min-width:0}
+  .ex-name{font-weight:700;font-size:15.5px;line-height:1.2;transition:.2s}
+  .ex.done .ex-name{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent)}
+  .ex-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+  .pill{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:999px;letter-spacing:.02em}
+  .ex-mus{font-size:11.5px;color:var(--muted);font-weight:600}
+  .ex-side{flex:0 0 auto;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+  .vid{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--text);
+    background:#222;border:1px solid var(--line);padding:6px 10px;border-radius:999px;text-decoration:none;white-space:nowrap}
+  .vid:active{background:#2c2c2c}
+  .vid.search{color:var(--muted)}
+  .load{width:74px;padding:7px 8px;border-radius:9px;border:1px solid var(--line);background:#0e110d;color:var(--text);
+    font-family:var(--body);font-weight:700;font-size:12px;text-align:center}
+  .load::placeholder{color:#4f574d;font-weight:500}
+  .load:focus{outline:none;border-color:var(--accent)}
+
+  .ss-group{border-left:2px solid rgba(202,255,50,.25);padding-left:10px;margin-bottom:6px}
+  .ss-tag{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--accent2);text-transform:uppercase;margin:0 0 7px 2px}
+
+  /* COPY BAR */
+  .copybar{position:fixed;left:0;right:0;bottom:0;z-index:5;max-width:540px;margin:0 auto;padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,transparent,#0a0b0a 28%);display:flex;gap:10px}
+  .btn{flex:1;border:none;border-radius:15px;padding:16px;font-family:var(--display);font-size:17px;letter-spacing:.04em;
+    text-transform:uppercase;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-main{background:var(--accent);color:#0a0b0a;box-shadow:0 8px 30px rgba(202,255,50,.25)}
+  .btn-main:active{transform:scale(.98)}
+  .btn-ghost{flex:0 0 auto;width:56px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);font-size:20px}
+
+  .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);z-index:9;opacity:0;pointer-events:none;
+    background:var(--accent);color:#0a0b0a;font-weight:800;font-size:14px;padding:12px 20px;border-radius:999px;transition:.3s;white-space:nowrap}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .foot{text-align:center;color:#4f574d;font-size:11px;margin-top:22px;line-height:1.6}
+  .foot b{color:var(--muted)}
+  .nutri{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:20px}
+  .nutri-h{font-weight:800;font-size:15px;color:var(--accent2);margin-bottom:4px}
+  .nutri-p{font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.45}
+  #nutriBox{width:100%;min-height:88px;background:#0e110d;border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--body);font-size:13px;padding:10px;resize:vertical}
+  #nutriBox:focus{outline:none;border-color:var(--accent)}
+  .nutri-btn{margin-top:10px;width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--accent);border-radius:10px;padding:13px;font-weight:800;font-family:var(--body);font-size:14px;cursor:pointer}
+  .nutri-btn:active{background:var(--accent);color:#0a0b0a}
+  #lock{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:26px;
+    background:radial-gradient(120% 60% at 50% -10%, rgba(202,255,50,.14), transparent 60%), var(--bg)}
+  #lock.hidden{display:none}
+  .lock-card{width:100%;max-width:320px;text-align:center;animation:rise .5s both}
+  .lock-logo{font-family:var(--display);font-size:56px;line-height:1;color:transparent;-webkit-text-stroke:1.6px var(--accent);letter-spacing:.02em}
+  .lock-sub{margin-top:10px;color:var(--muted);font-weight:600;font-size:15px}
+  .pin{margin-top:24px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    color:var(--text);font-size:30px;text-align:center;letter-spacing:.55em;padding:16px 16px 16px 24px;font-family:var(--body)}
+  .pin:focus{outline:none;border-color:var(--accent)}
+  .field{margin-top:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-size:16px;padding:15px;font-family:var(--body)}
+  .field:focus{outline:none;border-color:var(--accent)}
+  #authForm{margin-top:14px}
+  .lock-err{color:var(--danger);font-size:13px;font-weight:700;min-height:18px;margin-top:10px}
+  .pin-btn{margin-top:4px;width:100%;background:var(--accent);color:#0a0b0a;border:none;border-radius:14px;
+    padding:16px;font-family:var(--display);font-size:18px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+  .pin-btn:active{transform:scale(.98)}
+  .lock-hint{margin-top:16px;color:#5a6356;font-size:11.5px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-logo">ENTRENO</div>
+    <div class="lock-sub" id="lockSub">Entrá a tu cuenta</div>
+    <form id="authForm">
+      <input id="emailInput" class="field" type="email" inputmode="email" autocomplete="username" autocapitalize="off" autocorrect="off" placeholder="tu correo">
+      <input id="passInput" class="field" type="password" autocomplete="current-password" placeholder="contraseña">
+      <div class="lock-err" id="lockErr"></div>
+      <button id="authBtn" class="pin-btn" type="submit">Entrar</button>
+    </form>
+    <div class="lock-hint"><a id="toggleMode" style="color:var(--accent);cursor:pointer;text-decoration:underline">¿Primera vez? Crear cuenta</a></div>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <div class="kicker">Bryan · recomposición</div>
+    <h1>HOY <span class="out">ENTRENO</span></h1>
+    <div class="date" id="date">—</div>
+
+    <div class="topbar">
+      <div class="ring" id="ring"><div><b id="ringPct">0%</b><small>HECHO</small></div></div>
+      <div class="tstats">
+        <div class="big"><span id="doneN">0</span><span style="color:var(--muted)">/<span id="totN">0</span></span></div>
+        <div class="lbl">ejercicios de la sesión de hoy</div>
+        <div class="streak" id="streak">🔥 0 entrenos registrados</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+
+  <div class="nutri">
+    <div class="nutri-h">🍗 Informe de comida (Gemini)</div>
+    <p class="nutri-p">Cuando Gemini te dé el informe del día, pegalo aquí y subilo. Claude lo lee solo, sin que copies nada más.</p>
+    <textarea id="nutriBox" placeholder="Pegá aquí el informe de Gemini…"></textarea>
+    <button id="nutriBtn" class="nutri-btn">Subir informe a la nube</button>
+  </div>
+  <div class="foot">
+    Marcá cada ejercicio, anotá tu <b>peso × reps</b> y al terminar tocá <b>☁️ Terminar y subir</b>.<br>
+    <a id="copyLink" style="color:var(--accent);cursor:pointer;text-decoration:underline">o copiar manualmente</a> · La misión: <b>180 g de proteína</b>. 💪
+  </div>
+</div>
+
+<div class="copybar">
+  <button class="btn btn-ghost" id="resetBtn" title="Reiniciar día">↺</button>
+  <button class="btn btn-main" id="uploadBtn">☁️ Terminar y subir</button>
+</div>
+<div class="toast" id="toast">¡Copiado! Pégamelo en el chat ✓</div>
+
+<script>
+const YT = id => `https://www.youtube.com/watch?v=${id}`;
+const SEARCH = q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q+' técnica español')}`;
+const SUPA_URL="https://fhaepdmgexdrkjxmpkbp.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYWVwZG1nZXhkcmtqeG1wa2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NzAxNTMsImV4cCI6MjA5NzA0NjE1M30.0koO8IBFA2kHeVT0wdnBy_Sk0fv5BrSaYhNE4H2iNBQ";
+
+const RUTINA = {
+  pierna_a:{ico:"🦵",label:"Pierna A",groups:[
+    {ss:"Superserie 1 · 3 rondas",items:[
+      {n:"Extensión de pierna",m:"Cuádriceps",sr:"3×12–15",v:YT("qU6IzP-yMis")},
+      {n:"Curl femoral",m:"Femoral",sr:"3×12–15",v:YT("POgzKaM92X4")},
+    ]},
+    {ss:"Superserie 2 · 3 rondas",items:[
+      {n:"Búlgara (mano apoyada)",m:"Cuádriceps/glúteo",sr:"3×8–12 x pierna",v:YT("NaIJ0GQZIEQ")},
+      {n:"Pantorrilla de pie",m:"Pantorrilla",sr:"3×15–20",v:YT("_R3TOH-vnF8")},
+    ]},
+    {ss:"Core",items:[
+      {n:"Bird dog",m:"Core / espalda baja",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
+      {n:"Plancha lateral",m:"Core",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
+    ]},
+  ]},
+  torso_a:{ico:"💪",label:"Torso A",groups:[
+    {ss:"Superserie 1 · 3 rondas",items:[
+      {n:"Press de pecho (máquina)",m:"Pecho",sr:"3×6–10",v:YT("d-gwsl5BlMQ")},
+      {n:"Jalón al pecho",m:"Espalda / dorsal",sr:"3×8–12",v:YT("WW6E1zRdYoQ")},
+    ]},
+    {ss:"Superserie 2 · 3 rondas",items:[
+      {n:"Press inclinado 30°",m:"Pecho superior",sr:"3×8–12",v:YT("oTD5g77GgSA")},
+      {n:"Remo con pecho apoyado",m:"Espalda",sr:"3×10–12",v:YT("oKQJa6QNtNo")},
+    ]},
+    {ss:"Finisher · 2 rondas",items:[
+      {n:"Elevaciones laterales",m:"Hombro lateral",sr:"2×15–20",v:YT("zBqZqAjCnR4")},
+      {n:"Tríceps overhead",m:"Tríceps",sr:"2×10–15",v:YT("PyNaiTP1PIA")},
+    ]},
+  ]},
+  pierna_b:{ico:"🦵",label:"Pierna B",groups:[
+    {ss:"Superserie 1 · 3 rondas",items:[
+      {n:"Hip thrust",m:"Glúteo",sr:"3×10–15",v:YT("bcuxKS2qRGY")},
+      {n:"Curl femoral",m:"Femoral",sr:"3×12–15",v:YT("POgzKaM92X4")},
+    ]},
+    {ss:"Superserie 2 · 3 rondas",items:[
+      {n:"RDL ligero (mancuernas)",m:"Femoral · 2–3 RIR",sr:"3×8–12",v:YT("yxLk9X5C7RU")},
+      {n:"Pantorrilla de pie",m:"Pantorrilla",sr:"3×15–20",v:YT("_R3TOH-vnF8")},
+    ]},
+    {ss:"Core",items:[
+      {n:"Curl-up McGill",m:"Core anterior",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
+      {n:"Pallof press (banda)",m:"Core anti-rotación",sr:"3×8–12 x lado",v:YT("paOG670vr9c")},
+    ]},
+  ]},
+  torso_b:{ico:"💪",label:"Torso B",groups:[
+    {ss:"Superserie 1 · 3 rondas",items:[
+      {n:"Press inclinado 30°",m:"Pecho superior",sr:"3×8–12",v:YT("oTD5g77GgSA")},
+      {n:"Remo a un brazo",m:"Espalda",sr:"3×10–12 x lado",v:YT("inp7pjrEY1w")},
+    ]},
+    {ss:"Superserie 2 · 3 rondas",items:[
+      {n:"Press de hombro",m:"Hombro",sr:"3×8–12",v:YT("HrGQCS3c838")},
+      {n:"Jalón al pecho",m:"Espalda / dorsal",sr:"3×8–12",v:YT("WW6E1zRdYoQ")},
+    ]},
+    {ss:"Finisher · 2 rondas",items:[
+      {n:"Elevaciones laterales",m:"Hombro lateral",sr:"2×15–20",v:YT("zBqZqAjCnR4")},
+      {n:"Curl de bíceps",m:"Bíceps",sr:"2×10–15",v:YT("zTgnPq5PhAo")},
+    ]},
+  ]},
+};
+
+const KEY="bryan_entreno_v1";
+let store=JSON.parse(localStorage.getItem(KEY)||"{}");
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const SUG={1:"pierna_a",2:"torso_a",4:"pierna_b",5:"torso_b"};
+let cur=SUG[new Date().getDay()]||"pierna_a";
+
+function flat(day){return RUTINA[day].groups.flatMap(g=>g.items)}
+function data(){const f=todayStr();store[f]=store[f]||{};store[f][cur]=store[f][cur]||{done:{},notas:{}};return store[f][cur]}
+function save(){localStorage.setItem(KEY,JSON.stringify(store))}
+
+function renderDate(){
+  const d=new Date();
+  const opt={weekday:"long",day:"numeric",month:"long"};
+  document.getElementById("date").textContent=d.toLocaleDateString("es-ES",opt);
+}
+function renderTabs(){
+  const t=document.getElementById("tabs");t.innerHTML="";
+  Object.entries(RUTINA).forEach(([k,v])=>{
+    const sug=(SUG[new Date().getDay()]===k);
+    const el=document.createElement("div");
+    el.className="tab"+(k===cur?" active":"");
+    el.innerHTML=`${sug?'<span class="sug"></span>':''}<span class="t-ico">${v.ico}</span><span class="t-lbl">${v.label}</span>`;
+    el.onclick=()=>{cur=k;renderTabs();renderList();updTop()};
+    t.appendChild(el);
+  });
+}
+function renderList(){
+  const wrap=document.getElementById("list");wrap.innerHTML="";
+  const d=data();let idx=0;
+  RUTINA[cur].groups.forEach(g=>{
+    const gd=document.createElement("div");gd.className="ss-group";
+    gd.innerHTML=`<div class="ss-tag">${g.ss}</div>`;
+    g.items.forEach(it=>{
+      const i=idx;const done=!!d.done[i];const nota=d.notas[i]||"";
+      const card=document.createElement("div");
+      card.className="ex"+(done?" done":"");
+      card.style.animationDelay=(idx*0.04)+"s";
+      const isSearch=it.v.includes("/results");
+      card.innerHTML=`
+        <div class="check"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg></div>
+        <div class="ex-main">
+          <div class="ex-name">${it.n}</div>
+          <div class="ex-meta"><span class="pill">${it.sr}</span><span class="ex-mus">${it.m}</span></div>
+        </div>
+        <div class="ex-side">
+          <a class="vid${isSearch?' search':''}" href="${it.v}" target="_blank" rel="noopener">${isSearch?'🔍':'▶'} video</a>
+          <input class="load" placeholder="peso×reps" value="${nota.replace(/"/g,'&quot;')}" inputmode="text">
+        </div>`;
+      const input=card.querySelector(".load");
+      input.addEventListener("click",e=>e.stopPropagation());
+      input.addEventListener("input",e=>{d.notas[i]=e.target.value;save()});
+      card.querySelector(".vid").addEventListener("click",e=>e.stopPropagation());
+      card.addEventListener("click",()=>{d.done[i]=!d.done[i];save();card.classList.toggle("done",d.done[i]);updTop()});
+      gd.appendChild(card);idx++;
+    });
+    wrap.appendChild(gd);
+  });
+}
+function updTop(){
+  const d=data();const items=flat(cur);const tot=items.length;
+  let done=0;for(let i=0;i<tot;i++)if(d.done[i])done++;
+  const pct=tot?Math.round(done/tot*100):0;
+  document.getElementById("doneN").textContent=done;
+  document.getElementById("totN").textContent=tot;
+  document.getElementById("ringPct").textContent=pct+"%";
+  document.getElementById("ring").style.setProperty("--p",pct);
+  // streak: total días con >=1 ejercicio hecho
+  let count=0;Object.values(store).forEach(day=>Object.values(day).forEach(s=>{if(Object.values(s.done||{}).some(Boolean))count++}));
+  document.getElementById("streak").textContent=`🔥 ${count} entreno${count===1?'':'s'} registrado${count===1?'':'s'}`;
+}
+function copyDay(){
+  const d=data();const items=flat(cur);const f=todayStr();
+  let done=0;items.forEach((_,i)=>{if(d.done[i])done++});
+  let txt=`🏋️ ENTRENO — ${f} · ${RUTINA[cur].label}\nCompletado: ${done}/${items.length}\n\n`;
+  items.forEach((it,i)=>{
+    const ok=d.done[i];const nota=(d.notas[i]||"").trim();
+    txt+=`${ok?"✅":"⬜"} ${it.n}${ok&&nota?` — ${nota}`:""}\n`;
+  });
+  txt+=`\n(generado desde mi panel de entreno)`;
+  const fok=()=>toast("¡Copiado! Pégamelo en el chat ✓");
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(fok).catch(()=>fallback(txt,fok))}
+  else fallback(txt,fok);
+}
+function fallback(txt,cb){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(ta);cb()}
+function resetDay(){
+  if(!confirm("¿Borrar las marcas de esta sesión de hoy?"))return;
+  const f=todayStr();if(store[f])store[f][cur]={done:{},notas:{}};save();renderList();updTop();
+}
+
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+async function subirEntreno(){
+  const d=data();const items=flat(cur);const f=todayStr();let done=0;
+  const ej=items.map((it,i)=>{if(d.done[i])done++;return {n:it.n,hecho:!!d.done[i],carga:(d.notas[i]||"")}});
+  const body={fecha:f,dia:RUTINA[cur].label,ejercicios:ej,completados:done,total:items.length};
+  try{const r=await fetch(SUPA_URL+"/rest/v1/entrenos",{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
+    toast(r.ok?"¡Subido a la nube! ✓ Claude ya lo ve":"Error al subir ("+r.status+")");}
+  catch(e){toast("Sin internet — usá 'copiar manualmente'")}
+}
+async function subirInforme(){
+  const t=(document.getElementById("nutriBox").value||"").trim();
+  if(!t){toast("Pegá el informe de Gemini primero");return}
+  try{const r=await fetch(SUPA_URL+"/rest/v1/nutricion",{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({contenido:t})});
+    if(r.ok){toast("¡Informe subido! ✓");document.getElementById("nutriBox").value=""}else toast("Error ("+r.status+")");}
+  catch(e){toast("Sin internet")}
+}
+document.getElementById("uploadBtn").onclick=subirEntreno;
+document.getElementById("resetBtn").onclick=resetDay;
+document.getElementById("nutriBtn").onclick=subirInforme;
+document.getElementById("copyLink").onclick=copyDay;
+renderDate();renderTabs();renderList();updTop();
+
+let TOKEN=localStorage.getItem('bryan_entreno_tok')||"";let mode='login';
+function setMode(){document.getElementById('lockSub').textContent=mode==='login'?'Entrá a tu cuenta':'Creá tu cuenta';document.getElementById('authBtn').textContent=mode==='login'?'Entrar':'Crear cuenta';document.getElementById('toggleMode').textContent=mode==='login'?'¿Primera vez? Crear cuenta':'Ya tengo cuenta → Entrar';document.getElementById('passInput').setAttribute('autocomplete',mode==='login'?'current-password':'new-password')}
+function showLock(){document.getElementById('lock').classList.remove('hidden');document.body.style.overflow='hidden'}
+function hideLock(){document.getElementById('lock').classList.add('hidden');document.body.style.overflow=''}
+async function doAuth(ev){if(ev)ev.preventDefault();const email=document.getElementById('emailInput').value.trim();const pass=document.getElementById('passInput').value;const err=document.getElementById('lockErr');err.textContent='';if(!email||!pass){err.textContent='Completá correo y contraseña';return}
+  const ep=mode==='login'?'/auth/v1/token?grant_type=password':'/auth/v1/signup';const btn=document.getElementById('authBtn');const lbl=btn.textContent;btn.textContent='…';
+  try{const r=await fetch(SUPA_URL+ep,{method:'POST',headers:{apikey:SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});const j=await r.json().catch(()=>({}));
+    if(j.access_token){TOKEN=j.access_token;localStorage.setItem('bryan_entreno_tok',TOKEN);sessionStorage.setItem('unlocked','1');hideLock();return}
+    if(r.ok){err.textContent='Cuenta creada. Si te pide confirmar el correo, hacelo y luego entrá.'}
+    else{err.textContent=(j.msg||j.error_description||j.error||'Correo o contraseña incorrectos')}
+  }catch(e){err.textContent='Sin internet'}
+  btn.textContent=lbl;setMode();
+}
+document.getElementById('authForm').addEventListener('submit',doAuth);
+document.getElementById('toggleMode').onclick=function(){mode=(mode==='login')?'signup':'login';document.getElementById('lockErr').textContent='';setMode()};
+setMode();
+if(sessionStorage.getItem('unlocked')&&TOKEN)hideLock();else showLock();
+</script>
+</body>
+</html>
