@@ -189,6 +189,7 @@
 const SUPA_URL="https://fhaepdmgexdrkjxmpkbp.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYWVwZG1nZXhkcmtqeG1wa2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NzAxNTMsImV4cCI6MjA5NzA0NjE1M30.0koO8IBFA2kHeVT0wdnBy_Sk0fv5BrSaYhNE4H2iNBQ";
 let TOKEN=localStorage.getItem('bryan_entreno_tok')||"";
+let RT=localStorage.getItem('bryan_entreno_rt')||"";
 
 const YT = id => `https://www.youtube.com/watch?v=${id}`;
 
@@ -385,18 +386,30 @@ function copyDay(){
 function resetDay(){if(!confirm("¿Borrar las marcas de hoy?"))return;const f=todayStr();if(store[f])store[f][cur]={done:{},notas:{}};save();renderList();updTop()}
 
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+async function refresh(){
+  if(!RT)return false;
+  try{const r=await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:RT})});const j=await r.json().catch(()=>({}));
+    if(j.access_token){TOKEN=j.access_token;RT=j.refresh_token||RT;localStorage.setItem('bryan_entreno_tok',TOKEN);localStorage.setItem('bryan_entreno_rt',RT);return true}}catch(e){}
+  RT="";localStorage.removeItem('bryan_entreno_rt');return false;
+}
+async function authPost(path,body){
+  const mk=()=>({method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
+  let r=await fetch(SUPA_URL+path,mk());
+  if(r.status===401&&await refresh())r=await fetch(SUPA_URL+path,mk());
+  return r;
+}
 async function subirEntreno(){
   const d=data();const items=flat(cur);const f=todayStr();let done=0;
   const ej=items.map((it,i)=>{if(d.done[i])done++;return {n:it.n,hecho:!!d.done[i],carga:(d.notas[i]||"")}});
   const body={fecha:f,dia:RUTINA[cur].label,ejercicios:ej,completados:done,total:items.length};
-  try{const r=await fetch(SUPA_URL+"/rest/v1/entrenos",{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
+  try{const r=await authPost("/rest/v1/entrenos",body);
     toast(r.ok?"¡Subido a la nube! ✓ Claude ya lo ve":"Error al subir ("+r.status+")");}
   catch(e){toast("Sin internet — usá 'copiar manualmente'")}
 }
 async function subirInforme(){
   const t=(document.getElementById("nutriBox").value||"").trim();
   if(!t){toast("Pegá el informe de Gemini primero");return}
-  try{const r=await fetch(SUPA_URL+"/rest/v1/nutricion",{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({contenido:t})});
+  try{const r=await authPost("/rest/v1/nutricion",{contenido:t});
     if(r.ok){toast("¡Informe subido! ✓");document.getElementById("nutriBox").value=""}else toast("Error ("+r.status+")");}
   catch(e){toast("Sin internet")}
 }
@@ -406,7 +419,7 @@ function hideLock(){document.getElementById('lock').classList.add('hidden');docu
 async function doAuth(ev){if(ev)ev.preventDefault();const email=document.getElementById('emailInput').value.trim();const pass=document.getElementById('passInput').value;const err=document.getElementById('lockErr');err.textContent='';if(!email||!pass){err.textContent='Completá correo y contraseña';return}
   const btn=document.getElementById('authBtn');const lbl=btn.textContent;btn.textContent='…';
   try{const r=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});const j=await r.json().catch(()=>({}));
-    if(j.access_token){TOKEN=j.access_token;localStorage.setItem('bryan_entreno_tok',TOKEN);sessionStorage.setItem('unlocked','1');hideLock();btn.textContent=lbl;return}
+    if(j.access_token){TOKEN=j.access_token;RT=j.refresh_token||"";localStorage.setItem('bryan_entreno_tok',TOKEN);localStorage.setItem('bryan_entreno_rt',RT);hideLock();btn.textContent=lbl;return}
     err.textContent=(j.msg||j.error_description||j.error||'Correo o contraseña incorrectos');
   }catch(e){err.textContent='Sin internet'}
   btn.textContent=lbl;
@@ -420,7 +433,7 @@ document.getElementById("promptBtn").onclick=()=>copyText(PROMPT_GEMINI,"¡Promp
 document.getElementById("copyLink").onclick=copyDay;
 
 renderDate();renderTabs();renderSes();renderList();updTop();
-if(sessionStorage.getItem('unlocked')&&TOKEN)hideLock();else showLock();
+if(TOKEN)hideLock();else showLock();
 </script>
 </body>
 </html>

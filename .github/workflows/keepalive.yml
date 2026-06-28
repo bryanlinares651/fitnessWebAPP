@@ -1,0 +1,16 @@
+name: keep-supabase-awake
+# Despierta tu Supabase cada 3 días para que NO se pause por inactividad (límite free = 7 días).
+on:
+  schedule:
+    - cron: '17 13 */3 * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST
+        run: |
+          curl -s -o /dev/null -w "Supabase HTTP %{http_code}\n" \
+            "https://fhaepdmgexdrkjxmpkbp.supabase.co/rest/v1/entrenos?select=fecha&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYWVwZG1nZXhkcmtqeG1wa2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NzAxNTMsImV4cCI6MjA5NzA0NjE1M30.0koO8IBFA2kHeVT0wdnBy_Sk0fv5BrSaYhNE4H2iNBQ" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYWVwZG1nZXhkcmtqeG1wa2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NzAxNTMsImV4cCI6MjA5NzA0NjE1M30.0koO8IBFA2kHeVT0wdnBy_Sk0fv5BrSaYhNE4H2iNBQ"
