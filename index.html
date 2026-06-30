@@ -175,7 +175,8 @@
 
   <div class="foot">
     Marcá cada ejercicio, anotá tu <b>peso × reps</b> y al terminar tocá <b>☁️ Terminar y subir</b>.<br>
-    <a id="copyLink" style="color:var(--accent);cursor:pointer;text-decoration:underline">o copiar manualmente</a> · La misión: <b>180 g de proteína</b>. 💪
+    <a id="copyLink" style="color:var(--accent);cursor:pointer;text-decoration:underline">o copiar manualmente</a> · La misión: <b>180 g de proteína</b>. 💪<br>
+    <a id="logoutBtn" style="color:#5a6356;cursor:pointer;text-decoration:underline;font-size:10px">cerrar sesión</a>
   </div>
 </div>
 
@@ -390,12 +391,12 @@ async function refresh(){
   if(!RT)return false;
   try{const r=await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:RT})});const j=await r.json().catch(()=>({}));
     if(j.access_token){TOKEN=j.access_token;RT=j.refresh_token||RT;localStorage.setItem('bryan_entreno_tok',TOKEN);localStorage.setItem('bryan_entreno_rt',RT);return true}}catch(e){}
-  RT="";localStorage.removeItem('bryan_entreno_rt');return false;
+  return false;
 }
 async function authPost(path,body){
   const mk=()=>({method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+(TOKEN||SUPA_KEY),"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
   let r=await fetch(SUPA_URL+path,mk());
-  if(r.status===401&&await refresh())r=await fetch(SUPA_URL+path,mk());
+  if(r.status===401){if(await refresh())r=await fetch(SUPA_URL+path,mk());else logout();}
   return r;
 }
 async function subirEntreno(){
@@ -431,9 +432,16 @@ document.getElementById("resetBtn").onclick=resetDay;
 document.getElementById("nutriBtn").onclick=subirInforme;
 document.getElementById("promptBtn").onclick=()=>copyText(PROMPT_GEMINI,"¡Prompt copiado! Pegalo en Gemini 🤖");
 document.getElementById("copyLink").onclick=copyDay;
+function logout(){TOKEN="";RT="";localStorage.removeItem('bryan_entreno_tok');localStorage.removeItem('bryan_entreno_rt');showLock();toast("Tu sesión venció — entrá de nuevo y volvé a subir (tus marcas siguen guardadas)");}
+document.getElementById("logoutBtn").onclick=logout;
 
 renderDate();renderTabs();renderSes();renderList();updTop();
-if(TOKEN)hideLock();else showLock();
+(async()=>{
+  if(!TOKEN){showLock();return;}
+  hideLock();
+  if(RT){const ok=await refresh();if(!ok&&navigator.onLine)logout();}
+  else logout();
+})();
 </script>
 </body>
 </html>
