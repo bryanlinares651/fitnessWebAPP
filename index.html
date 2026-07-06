@@ -220,18 +220,14 @@ Reglas: usá la fecha real; si falta un dato escribí "sin registro" (no invente
 Si entendiste, respondé solo: "Listo Bryan. Mandame tu peso de hoy 💪" y esperá.`;
 
 const RUTINA = {
-  lun:{dia:"LUN", label:"💪 Torso A", boxeo:true, groups:[
-    {ss:"Superserie 1 · 3 rondas — pecho",items:[
-      {n:"Press inclinado 30°",m:"Pecho superior",sr:"3×8–12",v:YT("oTD5g77GgSA")},
-      {n:"Press plano con mancuernas",m:"Pecho medio/inferior",sr:"3×8–10",v:YT("jWnGhz1f5D4")},
+  lun:{dia:"LUN", label:"🫸 Pecho + Tríceps", boxeo:true, groups:[
+    {ss:"Pecho pesado (series normales, descansá 2 min)",items:[
+      {n:"Press plano con mancuernas",m:"Pecho medio/inferior",sr:"4×6–10",v:YT("jWnGhz1f5D4")},
+      {n:"Press inclinado 30°",m:"Pecho superior (levanta el pecho)",sr:"3×8–12",v:YT("oTD5g77GgSA")},
+      {n:"Cruce / aperturas en polea (Marcy)",m:"Pecho · estiramiento",sr:"3×10–15",v:YT("WNtBIde3Qks")},
     ]},
-    {ss:"Superserie 2 · 3 rondas — hombro",items:[
-      {n:"Press de hombro",m:"Hombro",sr:"3×8–12",v:YT("HrGQCS3c838")},
-      {n:"Elevaciones laterales",m:"Hombro lateral",sr:"3×15–20",v:YT("zBqZqAjCnR4")},
-    ]},
-    {ss:"Finisher · 2–3 rondas",items:[
-      {n:"Reverse fly (apertura posterior)",m:"Hombro POSTERIOR",sr:"3×12–20",v:YT("RG_41P2hP0s")},
-      {n:"Tríceps overhead",m:"Tríceps",sr:"2×10–15",v:YT("PyNaiTP1PIA")},
+    {ss:"Tríceps",items:[
+      {n:"Tríceps overhead",m:"Tríceps (cabeza larga)",sr:"3×10–15",v:YT("PyNaiTP1PIA")},
     ]},
     {ss:"Core",items:[
       {n:"Bird dog",m:"Core / espalda baja",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
@@ -253,18 +249,15 @@ const RUTINA = {
       {n:"Pallof press (banda)",m:"Core anti-rotación",sr:"3×8–12 x lado",v:YT("paOG670vr9c")},
     ]},
   ]},
-  mie:{dia:"MIÉ", label:"💪 Torso B", boxeo:true, groups:[
-    {ss:"Superserie 1 · 3 rondas — espalda",items:[
-      {n:"Jalón al pecho",m:"Espalda / dorsal",sr:"3×8–12",v:YT("WW6E1zRdYoQ")},
+  mie:{dia:"MIÉ", label:"🪮 Espalda + Bíceps", boxeo:true, groups:[
+    {ss:"Espalda (descansá 90s–2min)",items:[
+      {n:"Jalón al pecho",m:"Espalda / dorsal",sr:"4×8–12",v:YT("WW6E1zRdYoQ")},
       {n:"Remo con apoyo en banco",m:"Espalda (cuida lumbar)",sr:"3×10–12 x lado",v:YT("oKQJa6QNtNo")},
-    ]},
-    {ss:"Superserie 2 · 3 rondas",items:[
-      {n:"Press inclinado 30°",m:"Pecho",sr:"3×8–12",v:YT("oTD5g77GgSA")},
       {n:"Reverse fly (apertura posterior)",m:"Hombro POSTERIOR",sr:"3×12–20",v:YT("RG_41P2hP0s")},
     ]},
-    {ss:"Finisher · 2 rondas — brazos",items:[
+    {ss:"Superserie bíceps · 2–3 rondas",items:[
       {n:"Curl inclinado",m:"Bíceps (estirado)",sr:"3×8–12",v:YT("eSADGjh6Wf8")},
-      {n:"Tríceps overhead",m:"Tríceps",sr:"2×10–15",v:YT("PyNaiTP1PIA")},
+      {n:"Curl martillo",m:"Braquial / antebrazo",sr:"2×10–12",v:YT("RHdacbwKbTo")},
     ]},
     {ss:"Core",items:[
       {n:"Bird dog",m:"Core / espalda baja",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
@@ -286,18 +279,18 @@ const RUTINA = {
       {n:"Pallof press (banda)",m:"Core anti-rotación",sr:"3×8–12 x lado",v:YT("paOG670vr9c")},
     ]},
   ]},
-  vie:{dia:"VIE", label:"💪 Torso C", boxeo:true, groups:[
-    {ss:"Superserie 1 · 3 rondas — hombro",items:[
+  vie:{dia:"VIE", label:"🏋️ Hombros + Pecho + Brazos", boxeo:true, groups:[
+    {ss:"Hombro (descansá 90s)",items:[
       {n:"Press de hombro",m:"Hombro",sr:"3×8–12",v:YT("HrGQCS3c838")},
-      {n:"Elevaciones laterales",m:"Hombro lateral",sr:"3×15–20",v:YT("zBqZqAjCnR4")},
+      {n:"Elevaciones laterales",m:"Hombro lateral",sr:"4×12–20",v:YT("zBqZqAjCnR4")},
     ]},
-    {ss:"Superserie 2 · 3 rondas — posterior",items:[
-      {n:"Reverse fly (apertura posterior)",m:"Hombro POSTERIOR",sr:"3×12–20",v:YT("RG_41P2hP0s")},
+    {ss:"Superserie posterior + pecho · 2–3 rondas",items:[
       {n:"Face pull (banda)",m:"Hombro posterior / postura",sr:"3×15–25",v:YT("7Ks6tmEuKNo")},
+      {n:"Press inclinado 30°",m:"Pecho superior (2ª dosis)",sr:"2×8–12",v:YT("oTD5g77GgSA")},
     ]},
-    {ss:"Finisher · 2–3 rondas — brazos",items:[
-      {n:"Curl inclinado",m:"Bíceps (estirado)",sr:"3×8–12",v:YT("eSADGjh6Wf8")},
-      {n:"Tríceps overhead",m:"Tríceps",sr:"3×10–15",v:YT("PyNaiTP1PIA")},
+    {ss:"Superserie brazos · 2 rondas",items:[
+      {n:"Curl martillo",m:"Braquial / antebrazo",sr:"2×10–12",v:YT("RHdacbwKbTo")},
+      {n:"Tríceps overhead",m:"Tríceps",sr:"2×10–15",v:YT("PyNaiTP1PIA")},
     ]},
     {ss:"Core",items:[
       {n:"Bird dog",m:"Core",sr:"5-3-1 · 8–10s",v:YT("Kz_pVWfk460")},
