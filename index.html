@@ -194,30 +194,11 @@ let RT=localStorage.getItem('bryan_entreno_rt')||"";
 
 const YT = id => `https://www.youtube.com/watch?v=${id}`;
 
-const PROMPT_GEMINI = `Eres mi coach de nutrición y seguimiento. Sé BREVE (1 a 3 líneas, sin sermones). Guarda este contexto toda la conversación.
-
-QUIÉN SOY: Hombre, 18, 1.80 m, ~86 kg, 24% de grasa. Meta: bajar grasa SIN perder músculo. Mi falla histórica: nunca llego a la proteína. Tomo whey ISO100 (25 g por scoop) y creatina. Tengo freidora de aire. Como lo que cocina mi mamá. Solo agua y Coca Zero.
-
-REGLAS NO NEGOCIABLES (vigílalas): Proteína 180 g (la #1) · Calorías ~2100 · Agua 3.5-4 L · NADA de snacks trampa de noche (pan Xelapan, TorTrix, Lays, Nachos, Crujitos, Kisses) · Carne/pollo a la plancha o freidora de aire, no frito.
-
-CÓMO TRABAJAMOS HOY (te lo voy mandando en este orden):
-1) Primero te digo MI PESO del día.
-2) Luego te mando lo que como: desayuno, snack (si hay), almuerzo, snack (si hay), cena. Por cada uno: estima calorías + proteína y dame el acumulado "llevas X / 180 g de proteína". Si a media tarde voy bajo en proteína, recordame meter un scoop de ISO100.
-3) Te mando una CAPTURA de mi reloj (Apple Watch) con las calorías que quemé hoy; usala para el balance.
-4) Cuando escriba "CIERRA EL DÍA", generá UN archivo .md en bloque de código, EXACTO así:
-
-# Día (fecha de hoy AAAA-MM-DD)
-- Peso: XX.X kg
-- Proteína: XXX / 180 g (✅ o ⚠️)
-- Calorías comidas: XXXX / 2100 (✅ o ⚠️)
-- Calorías quemadas (reloj): XXX
-- Agua: X / 4 L
-- Comidas: desayuno / snack / almuerzo / snack / cena (kcal y proteína c/u)
-- Veredicto del día + 1 mejora para mañana
-
-Reglas: usá la fecha real; si falta un dato escribí "sin registro" (no inventes); mantené siempre el formato.
-
-Si entendiste, respondé solo: "Listo Bryan. Mandame tu peso de hoy 💪" y esperá.`;
+const PROMPT_GEMINI = `Ayudame a registrar mi alimentación y actividad de forma clara.
+Pedime los datos que quiera compartir en esta conversación; no asumas un perfil personal ni objetivos nutricionales.
+Resumí únicamente la información que te dé, indicando cuando falten datos.
+Prepará un informe del día con comidas, cantidades y actividad registradas, sin inventar valores.
+Las decisiones de salud o cambios de alimentación deben revisarse con un profesional apropiado.`;
 
 const RUTINA = {
   lun:{dia:"LUN", label:"🫸 Pecho + Tríceps", boxeo:true, groups:[
@@ -311,11 +292,51 @@ let store=JSON.parse(localStorage.getItem(KEY)||"{}");
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const DOW={0:"dom",1:"lun",2:"mar",3:"mie",4:"jue",5:"vie",6:"sab"};
 const ORDER=["lun","mar","mie","jue","vie","sab","dom"];
+let sessionDate=todayStr();
 let cur=DOW[new Date().getDay()]||"lun";
+let pendingWrites=Promise.resolve();
 
 function flat(day){return RUTINA[day].groups.flatMap(g=>g.items)}
-function data(){const f=todayStr();store[f]=store[f]||{};store[f][cur]=store[f][cur]||{done:{},notas:{}};return store[f][cur]}
-function save(){localStorage.setItem(KEY,JSON.stringify(store))}
+function data(date=sessionDate,day=cur){return store[date]?.[day]||{done:{},notas:{}}}
+function renderSession(){renderDate();renderTabs();renderSes();renderList();updTop()}
+function ensureCurrentDay(){
+  const now=todayStr();
+  if(now===sessionDate)return true;
+  sessionDate=now;cur=DOW[new Date().getDay()]||"lun";
+  store=JSON.parse(localStorage.getItem(KEY)||"{}");
+  renderSession();toast("Nuevo día: revisá la sesión antes de continuar");return false;
+}
+function syncProgress(){
+  const d=data();
+  document.querySelectorAll("#list .ex").forEach((card,i)=>{
+    card.classList.toggle("done",!!d.done[i]);
+    const input=card.querySelector(".load");
+    if(document.activeElement!==input)input.value=d.notas[i]||"";
+  });
+  updTop();
+}
+function editSession(date,day,change){
+  if(!ensureCurrentDay()||date!==sessionDate)return Promise.resolve(false);
+  if(!navigator.locks?.request){toast("Para guardar, abrí esta página en un navegador actualizado con conexión segura");return Promise.resolve(false)}
+  const next=pendingWrites.then(()=>navigator.locks.request(KEY+":write",()=>{
+    // The read must happen after acquiring the cross-tab lock, never before it.
+    if(date!==todayStr()){ensureCurrentDay();return false}
+    const latest=JSON.parse(localStorage.getItem(KEY)||"{}");
+    latest[date]=latest[date]||{};
+    const d=latest[date][day]=latest[date][day]||{done:{},notas:{}};
+    d.done=d.done||{};d.notas=d.notas||{};
+    change(d);
+    localStorage.setItem(KEY,JSON.stringify(latest));store=latest;
+    if(date===sessionDate)syncProgress();return true;
+  }));
+  pendingWrites=next.catch(()=>{toast("No se pudo guardar el cambio. Volvé a intentarlo");return false});
+  return pendingWrites;
+}
+async function currentSnapshot(){
+  ensureCurrentDay();await pendingWrites;ensureCurrentDay();
+  store=JSON.parse(localStorage.getItem(KEY)||"{}");syncProgress();
+  return {date:sessionDate,day:cur,session:data()};
+}
 
 function renderDate(){const d=new Date();document.getElementById("date").textContent=d.toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"})}
 function renderTabs(){
@@ -324,7 +345,7 @@ function renderTabs(){
     const el=document.createElement("div");
     el.className="tab"+(k===cur?" active":"")+(v.rest?" rest":" has")+(k===hoy?" today":"");
     el.innerHTML=`<span class="t-lbl">${v.dia}</span><span class="t-dot"></span>`;
-    el.onclick=()=>{cur=k;renderTabs();renderList();renderSes();updTop()};
+    el.onclick=()=>{if(!ensureCurrentDay())return;cur=k;renderTabs();renderList();renderSes();updTop()};
     t.appendChild(el);
   });
 }
@@ -333,7 +354,7 @@ function renderSes(){
   s.innerHTML=`<span class="s-name">${v.label}</span>`+(v.boxeo?`<span class="s-box">🥊 + boxeo</span>`:"");
 }
 function renderList(){
-  const wrap=document.getElementById("list");wrap.innerHTML="";const v=RUTINA[cur];const d=data();let idx=0;
+  const wrap=document.getElementById("list");wrap.innerHTML="";const v=RUTINA[cur];const d=data();const date=sessionDate,day=cur;let idx=0;
   if(!v.groups.length){wrap.innerHTML=`<div class="restbox"><div class="r-emoji">😴</div><div class="r-txt">Día de descanso.<br>Recuperás músculo durmiendo. Caminá si querés.</div></div>`;return}
   v.groups.forEach(g=>{
     const gd=document.createElement("div");gd.className="ss-group";gd.innerHTML=`<div class="ss-tag">${g.ss}</div>`;
@@ -349,9 +370,9 @@ function renderList(){
           <input class="load" placeholder="peso×reps" value="${nota.replace(/"/g,'&quot;')}" inputmode="text"></div>`;
       const input=card.querySelector(".load");
       input.addEventListener("click",e=>e.stopPropagation());
-      input.addEventListener("input",e=>{d.notas[i]=e.target.value;save()});
+      input.addEventListener("input",e=>{const value=e.target.value;return editSession(date,day,session=>{session.notas[i]=value})});
       card.querySelector(".vid").addEventListener("click",e=>e.stopPropagation());
-      card.addEventListener("click",()=>{d.done[i]=!d.done[i];save();card.classList.toggle("done",d.done[i]);updTop()});
+      card.addEventListener("click",()=>editSession(date,day,session=>{session.done[i]=!session.done[i]}));
       gd.appendChild(card);idx++;
     });
     wrap.appendChild(gd);
@@ -370,15 +391,21 @@ function copyText(txt,msg){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok))}else fb(txt,ok);
 }
 function fb(txt,cb){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(ta);cb()}
-function copyDay(){
-  const d=data();const items=flat(cur);const f=todayStr();let done=0;
-  let txt=`🏋️ ENTRENO — ${f} · ${RUTINA[cur].label}\n`;
+async function copyDay(){
+  const {date:f,day,session:d}=await currentSnapshot();const items=flat(day);let done=0;
+  let txt=`🏋️ ENTRENO — ${f} · ${RUTINA[day].label}\n`;
   items.forEach((it,i)=>{if(d.done[i])done++});
-  txt=`🏋️ ENTRENO — ${f} · ${RUTINA[cur].label}\nCompletado: ${done}/${items.length}\n\n`;
+  txt=`🏋️ ENTRENO — ${f} · ${RUTINA[day].label}\nCompletado: ${done}/${items.length}\n\n`;
   items.forEach((it,i)=>{const ok=d.done[i];const nota=(d.notas[i]||"").trim();txt+=`${ok?"✅":"⬜"} ${it.n}${ok&&nota?` — ${nota}`:""}\n`;});
   copyText(txt,"¡Copiado! Pégamelo en el chat ✓");
 }
-function resetDay(){if(!confirm("¿Borrar las marcas de hoy?"))return;const f=todayStr();if(store[f])store[f][cur]={done:{},notas:{}};save();renderList();updTop()}
+async function resetDay(){
+  if(!ensureCurrentDay())return;
+  const date=sessionDate,day=cur;
+  if(!confirm("¿Borrar las marcas de hoy?"))return;
+  await editSession(date,day,d=>{d.done={};d.notas={}});
+  renderList();updTop();
+}
 
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
 async function refresh(){
@@ -394,19 +421,29 @@ async function authPost(path,body){
   return r;
 }
 async function subirEntreno(){
-  const d=data();const items=flat(cur);const f=todayStr();let done=0;
+  const {date:f,day,session:d}=await currentSnapshot();const items=flat(day);let done=0;
   const ej=items.map((it,i)=>{if(d.done[i])done++;return {n:it.n,hecho:!!d.done[i],carga:(d.notas[i]||"")}});
-  const body={fecha:f,dia:RUTINA[cur].label,ejercicios:ej,completados:done,total:items.length};
+  const body={fecha:f,dia:RUTINA[day].label,ejercicios:ej,completados:done,total:items.length};
   try{const r=await authPost("/rest/v1/entrenos",body);
     toast(r.ok?"¡Subido a la nube! ✓ Claude ya lo ve":"Error al subir ("+r.status+")");}
   catch(e){toast("Sin internet — usá 'copiar manualmente'")}
 }
+let reportInFlight=false;
+let reportRevision=0;
+document.getElementById("nutriBox").addEventListener("input",()=>{reportRevision++});
 async function subirInforme(){
-  const t=(document.getElementById("nutriBox").value||"").trim();
+  if(reportInFlight)return;
+  const box=document.getElementById("nutriBox"),button=document.getElementById("nutriBtn");
+  const original=box.value||"",revision=reportRevision,t=original.trim();
   if(!t){toast("Pegá el informe de Gemini primero");return}
+  reportInFlight=true;button.disabled=true;
   try{const r=await authPost("/rest/v1/nutricion",{contenido:t});
-    if(r.ok){toast("¡Informe subido! ✓");document.getElementById("nutriBox").value=""}else toast("Error ("+r.status+")");}
+    if(r.ok){
+      if(reportRevision===revision&&box.value===original){box.value="";toast("¡Informe subido! ✓")}
+      else toast("Informe enviado; el borrador nuevo sigue pendiente");
+    }else toast("Error ("+r.status+")");}
   catch(e){toast("Sin internet")}
+  finally{reportInFlight=false;button.disabled=false}
 }
 
 function showLock(){document.getElementById('lock').classList.remove('hidden');document.body.style.overflow='hidden'}
@@ -429,7 +466,15 @@ document.getElementById("copyLink").onclick=copyDay;
 function logout(){TOKEN="";RT="";localStorage.removeItem('bryan_entreno_tok');localStorage.removeItem('bryan_entreno_rt');showLock();toast("Tu sesión venció — entrá de nuevo y volvé a subir (tus marcas siguen guardadas)");}
 document.getElementById("logoutBtn").onclick=logout;
 
-renderDate();renderTabs();renderSes();renderList();updTop();
+window.addEventListener("focus",ensureCurrentDay);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)ensureCurrentDay()});
+window.addEventListener("storage",event=>{
+  if(event.key!==KEY&&event.key!==null)return;
+  if(!ensureCurrentDay())return;
+  store=JSON.parse(localStorage.getItem(KEY)||"{}");syncProgress();
+});
+setInterval(ensureCurrentDay,30000);
+renderSession();
 (async()=>{
   if(!TOKEN){showLock();return;}
   hideLock();
